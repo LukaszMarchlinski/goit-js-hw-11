@@ -1,5 +1,5 @@
 body {
-  background-color: #dcd2cb;
+  background-color: #bbe2eb;
 }
 
 img {
@@ -8,6 +8,7 @@ img {
   height: auto;
   height: 30vh;
   object-fit: cover;
+  
 }
 
 a {
