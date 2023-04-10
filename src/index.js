@@ -1,94 +1,93 @@
+import './css/styles.css';
 import Notiflix from 'notiflix';
+import { fetchImg } from './js/fetch-images';
+import { renderGallery } from './js/render-gallery';
+import { onScroll, onTopBtn } from './js/scroll';
+import SimpleLightbox from "simplelightbox";
+import "simplelightbox/dist/simple-lightbox.min.css";
+import simpleLightbox from 'simplelightbox';
 
-const axios = require('axios').default;
-
-const input = document.querySelector('input');
-const searchForm = document.querySelector('.search-form');
-const button = document.querySelector('button');
+const searchForm = document.querySelector('#search-form');
 const gallery = document.querySelector('.gallery');
 const loadMore = document.querySelector('.load-more');
-
+let query = '';
 let page = 1;
-let per_page = 40;
+let simpleLightBox;
+let perPage = 40;
 
-gallery.classList.add('gallery__div');
 
-const searchImages = async e => {
-    const params = new URLSearchParams({
-        key: "35166786-6cff48c73f51fd457f4a9ef76",
-        image_type: "photo",
-        orientation: "horizontal",
-        safesearch: true,
-        page: page,
-        per_page: per_page,
-    });
+searchForm.addEventListener('submit', onSearchForm);
+loadMore.addEventListener('click', onLoadMore);
 
-    const response = await axios.get(`https://pixabay.com/api/?${params}&q=` + searchForm.elements.searchQuery.value);
-    return response;
-};
+onScroll();
+onTopBtn();
 
-const showImages = (response) => {
-    const totalHits = response.data.total;
-    const photos = response.data.hits;
-    const totalPages = Math.ceil(totalHits / per_page);
-    if (photos.length === 0) {
-        Notiflix.Notify.failure('Sorry, there are no images matching your search query. Please try again.');
-    } else if (page > totalPages) {
-        loadMore.classList.remove('isVisible');
-        Notiflix.Notify.failure("We're sorry, but you've reached the end of search results.");
-    }
-    else {
-        loadMore.classList.add('isVisible');
-        Notiflix.Notify.success(`Hooray! We found ${totalHits} images.`)
-        const markup = photos
-            .map((photo) =>
-                `<div class= "photo-card">
-                    <img src="${photo.webformatURL}" alt="${photo.tags}" loading="lazy" />
-                    <div class="info">
-                        <p class="info-item">
-                            <b>Likes</b> ${photo.likes}
-                        </p>
-                        <p class="info-item">
-                            <b>Views</b> ${photo.views}
-                        </p>
-                        <p class="info-item">
-                            <b>Comments</b> ${photo.comments}
-                        </p>
-                        <p class="info-item">
-                            <b>Downloads</b> ${photo.downloads}
-                        </p></div>
-                    </div >`
-            )
-            .join("");
-        gallery.insertAdjacentHTML("beforeend", markup);
-    }
-};
-
-searchForm.addEventListener("submit", (e) => {
+function onSearchForm(e) {
     e.preventDefault();
-    gallery.innerHTML = '';
+    window.scrollTo({ top: 0 });
     page = 1;
-    searchImages()
-        .then(
-            response => {
-                showImages(response);
-                page += 1;
-            })
-        .catch((error) => console.log(error))
-});
+    query = e.currentTarget.searchQuery.value.trim();
+    gallery.innerHTML = '';
+    loadMore.classList.add('is-hidden');
 
-loadMore.addEventListener("click", () => {
-    searchImages()
-        .then(
-            response => {
-                showImages(response);
-                page += 1;
-                const { height: cardHeight } = document
-                .querySelector(".gallery")
-                .firstElementChild.getBoundingClientRect();
+    if (query === '') {
+        emptySearch();
+        return;
+    }
 
-                window.scrollBy({top: cardHeight * 2, behavior: "smooth",
-});
-            })
-        .catch((error) => console.log(error))
-});
+    fetchImg(query, page, perPage).then(({ data }) => {
+        if (data.totalHits === 0) {
+            imagesNotFound();
+        } else {
+            renderGallery(data.hits);
+            simpleLightBox = new SimpleLightbox('.gallery a').refresh();
+            imagesFound(data);
+
+            if (data.totalHits > perPage) {
+                loadMore.classList.remove('is-hidden');
+            }
+        }
+    })
+        .catch(error => console.log(error))
+        .finally(() => {
+        searchForm.reset();
+    });
+}
+
+
+function onLoadMore() {
+    page += 1;
+    simpleLightBox.destroy();
+
+    fetchImg(query, page, perPage)
+        .then(({ data }) => {
+            renderGallery(data.hits);
+            simpleLightBox = new SimpleLightbox('.gallery a').refresh();
+            const totalPages = Math.ceil(data.totalHits / perPage);
+
+            if (page > totalPages) {
+                loadMore.classList.add('is-hidden');
+                endOfSearch();
+            }
+        })
+        .catch(error => console.log(error));
+}
+
+function emptySearch() {
+    Notiflix.Notify.failure(
+      'The search string cannot be empty. Please specify your search query.');
+}
+
+function imagesNotFound() {
+    Notiflix.Notify.failure(
+      'Sorry, there are no images matching your search query. Please try again.');
+}
+
+function imagesFound(data) {
+    Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
+}
+
+function endOfSearch() {
+    Notiflix.Notify.failure(
+      "We're sorry, but you've reached the end of search results.");
+}
