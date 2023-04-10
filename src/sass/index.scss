@@ -1,2 +1,79 @@
 @import './common';
 @import './example';
+
+.gallery__div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 20px;
+    align-items: stretch;
+    justify-content: space-between;
+}
+
+.photo-card {
+    width: calc((100% / 4) - 20px);
+    height: 350px;
+    border: 1px solid rgb(226, 222, 242);
+}
+
+img {
+    width: 100%;
+    height: calc(100% - 90px);
+    display: block;
+    object-fit: cover;
+}
+
+p {
+    font-size: 15px;
+    line-height: 50%;
+    letter-spacing: 0.03em;
+}
+
+.info {
+    display: flex;
+    justify-content: space-around;
+    padding-top: 12px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+}
+
+.search-form {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    height: 70px;
+    background-color: rgb(70, 70, 255);
+    padding: 15px;
+}
+
+.search-form button {
+    background-color: rgb(153, 204, 255);
+    border-color: rgb(102, 178, 255);
+    border-radius: 6px;
+    cursor: pointer;
+    padding-inline: 20px;
+}
+
+.search-form input {
+    outline: none;
+}
+
+.load-more {
+    display: none;
+    background-color:rgb(153, 204, 255);
+}
+
+.isVisible {
+    display: flex;
+    border-color: rgb(102, 178, 255);
+    border-radius: 6px;
+    cursor: pointer;
+    padding-inline: 20px;
+    padding: 10px;
+    margin: 30px;
+}
